@@ -1,0 +1,10 @@
+__pycache__/
+*.pyc
+.env
+.DS_Store
+
+catboost_info/
+*.tfevents
+tmp/
+
+experiment/catboost_info/tmp

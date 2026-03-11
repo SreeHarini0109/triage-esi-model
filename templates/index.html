@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ESI Triage | Clinical Intelligence</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #0a0a0c;
+            --card-bg: rgba(255, 255, 255, 0.03);
+            --border-color: rgba(255, 255, 255, 0.08);
+            --text-primary: #ffffff;
+            --text-secondary: rgba(255, 255, 255, 0.6);
+            --accent-glow: rgba(0, 122, 255, 0.2);
+            --transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+
+            /* Severity Colors */
+            --esi-1: #ff3b30;
+            /* Resuscitation - Red */
+            --esi-2: #ff9500;
+            /* Emergent - Orange */
+            --esi-3: #ffcc00;
+            /* Urgent - Yellow */
+            --esi-4: #4cd964;
+            /* Less Urgent - Green */
+            --esi-5: #007aff;
+            /* Non-Urgent - Blue */
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-primary);
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            perspective: 1000px;
+        }
+
+        /* Ambient Background Glow */
+        body::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 600px;
+            height: 600px;
+            background: radial-gradient(circle, var(--accent-glow) 0%, transparent 70%);
+            z-index: -1;
+            transition: var(--transition);
+        }
+
+        body.esi-1::before {
+            background: radial-gradient(circle, rgba(255, 59, 48, 0.15) 0%, transparent 70%);
+        }
+
+        body.esi-2::before {
+            background: radial-gradient(circle, rgba(255, 149, 0, 0.15) 0%, transparent 70%);
+        }
+
+        body.esi-3::before {
+            background: radial-gradient(circle, rgba(255, 204, 0, 0.15) 0%, transparent 70%);
+        }
+
+        body.esi-4::before {
+            background: radial-gradient(circle, rgba(76, 217, 100, 0.15) 0%, transparent 70%);
+        }
+
+        body.esi-5::before {
+            background: radial-gradient(circle, rgba(0, 122, 255, 0.15) 0%, transparent 70%);
+        }
+
+        .app-container {
+            width: 100%;
+            max-width: 900px;
+            display: grid;
+            grid-template-columns: 1fr 320px;
+            gap: 24px;
+            padding: 24px;
+            background: var(--card-bg);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--border-color);
+            border-radius: 24px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+            animation: slideUp 0.8s ease-out;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px) rotateX(5deg);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0) rotateX(0);
+            }
+        }
+
+        .main-panel h1 {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 8px;
+            background: linear-gradient(to right, #fff, #999);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .main-panel p {
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+            margin-bottom: 32px;
+        }
+
+        .vital-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+        }
+
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .input-group label {
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--text-secondary);
+        }
+
+        .input-group input {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 12px 16px;
+            color: #fff;
+            font-size: 1rem;
+            font-family: inherit;
+            outline: none;
+            transition: var(--transition);
+        }
+
+        .input-group input:focus {
+            border-color: rgba(255, 255, 255, 0.2);
+            background: rgba(255, 255, 255, 0.08);
+            box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.03);
+        }
+
+        .predict-btn {
+            grid-column: span 2;
+            margin-top: 12px;
+            padding: 16px;
+            background: #fff;
+            color: #000;
+            border: none;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .predict-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(255, 255, 255, 0.1);
+        }
+
+        .results-panel {
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 16px;
+            padding: 32px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            border: 1px solid var(--border-color);
+        }
+
+        .esi-badge {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 2.5rem;
+            font-weight: 800;
+            margin-bottom: 24px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 2px solid var(--border-color);
+            transition: var(--transition);
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.2);
+        }
+
+        .esi-label {
+            font-size: 1.25rem;
+            font-weight: 700;
+            margin-bottom: 12px;
+            opacity: 0.4;
+            transition: var(--transition);
+        }
+
+        .esi-desc {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            line-height: 1.5;
+            opacity: 0.4;
+            transition: var(--transition);
+        }
+
+        /* Active Severity Styles */
+        .esi-1 .esi-badge {
+            border-color: var(--esi-1);
+            color: var(--esi-1);
+            box-shadow: 0 0 40px rgba(255, 59, 48, 0.3);
+        }
+
+        .esi-2 .esi-badge {
+            border-color: var(--esi-2);
+            color: var(--esi-2);
+            box-shadow: 0 0 40px rgba(255, 149, 0, 0.3);
+        }
+
+        .esi-3 .esi-badge {
+            border-color: var(--esi-3);
+            color: var(--esi-3);
+            box-shadow: 0 0 40px rgba(255, 204, 0, 0.3);
+        }
+
+        .esi-4 .esi-badge {
+            border-color: var(--esi-4);
+            color: var(--esi-4);
+            box-shadow: 0 0 40px rgba(76, 217, 100, 0.3);
+        }
+
+        .esi-5 .esi-badge {
+            border-color: var(--esi-5);
+            color: var(--esi-5);
+            box-shadow: 0 0 40px rgba(0, 122, 255, 0.3);
+        }
+
+        .active-result .esi-label,
+        .active-result .esi-desc {
+            opacity: 1;
+        }
+
+        /* Mobile Responsive */
+        @media (max-width: 768px) {
+            body {
+                height: auto;
+                padding: 40px 20px;
+            }
+
+            .app-container {
+                grid-template-columns: 1fr;
+            }
+
+            .vital-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .predict-btn {
+                grid-column: span 1;
+            }
+        }
+    </style>
+</head>
+
+<body id="body">
+
+    <div class="app-container">
+        <div class="main-panel">
+            <h1>ESI Triage Intelligence</h1>
+            <p>Predicting emergency severity levels using instantaneous presentation data.</p>
+
+            <div class="vital-grid">
+                <div class="input-group">
+                    <label>Heart Rate</label>
+                    <input type="number" id="HR" value="80" placeholder="bpm">
+                </div>
+                <div class="input-group">
+                    <label>O2 Saturation</label>
+                    <input type="number" id="O2Sat" value="98" placeholder="%">
+                </div>
+                <div class="input-group">
+                    <label>Temperature</label>
+                    <input type="number" id="Temp" value="37.0" placeholder="°C">
+                </div>
+                <div class="input-group">
+                    <label>Systolic BP</label>
+                    <input type="number" id="SBP" value="120" placeholder="mmHg">
+                </div>
+                <div class="input-group">
+                    <label>MAP</label>
+                    <input type="number" id="MAP" value="90" placeholder="mmHg">
+                </div>
+                <div class="input-group">
+                    <label>Diastolic BP</label>
+                    <input type="number" id="DBP" value="80" placeholder="mmHg">
+                </div>
+                <div class="input-group">
+                    <label>Resp. Rate</label>
+                    <input type="number" id="Resp" value="16" placeholder="bpm">
+                </div>
+                <div class="input-group">
+                    <label>End Tidal CO2</label>
+                    <input type="number" id="EtCO2" placeholder="mmHg">
+                </div>
+                <button class="predict-btn" onclick="predictESI()">Analyze Presentation</button>
+            </div>
+        </div>
+
+        <div class="results-panel" id="resultsPanel">
+            <div class="esi-badge" id="esiBadge">—</div>
+            <div class="esi-label" id="esiLabel">Awaiting Input</div>
+            <div class="esi-desc" id="esiDesc">Enter vital signs and analyze to determine the appropriate ESI level.
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const ESI_INFO = {
+            1: { label: "Resuscitation", desc: "Immediate life-saving intervention required. High clinical instability." },
+            2: { label: "Emergent", desc: "High-risk situation or confused/lethargic/disoriented patient." },
+            3: { label: "Urgent", desc: "Stable vital signs but multiple resources required for assessment." },
+            4: { label: "Less Urgent", desc: "Stable patient requiring only one resource for evaluation." },
+            5: { label: "Non-Urgent", desc: "Stable patient requiring no resources for clinical evaluation." }
+        };
+
+        async function predictESI() {
+            const features = ['HR', 'O2Sat', 'Temp', 'SBP', 'MAP', 'DBP', 'Resp', 'EtCO2'];
+            const payload = {};
+
+            features.forEach(f => {
+                const val = document.getElementById(f).value;
+                payload[f] = val ? parseFloat(val) : NaN;
+            });
+
+            const btn = document.querySelector('.predict-btn');
+            btn.innerText = "Analyzing...";
+            btn.disabled = true;
+
+            try {
+                const response = await fetch('/predict', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                const data = await response.json();
+
+                if (data.error) {
+                    alert("Error: " + data.error);
+                    return;
+                }
+
+                updateUI(data.esi_level);
+            } catch (err) {
+                alert("Connection error: " + err);
+            } finally {
+                btn.innerText = "Analyze Presentation";
+                btn.disabled = false;
+            }
+        }
+
+        function updateUI(esi) {
+            const body = document.getElementById('body');
+            const badge = document.getElementById('esiBadge');
+            const label = document.getElementById('esiLabel');
+            const desc = document.getElementById('esiDesc');
+            const panel = document.getElementById('resultsPanel');
+
+            // Reset classes
+            body.className = `esi-${esi}`;
+            panel.className = 'results-panel active-result';
+
+            // Update content
+            badge.innerText = esi;
+            label.innerText = ESI_INFO[esi].label;
+            desc.innerText = ESI_INFO[esi].desc;
+        }
+    </script>
+
+</body>
+
+</html>

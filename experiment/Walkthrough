@@ -1,0 +1,118 @@
+# ESI Triage Classification Models
+
+## Objective
+Classify patients into 5 ESI levels using presentation-time vital signs from the PhysioNet 2019 Sepsis dataset, across **11 models** including a stacking ensemble.
+
+## Proxy ESI Labeling
+MEWS + Shock Index + O2Sat thresholds map vitals → ESI 1–5. See [data_loader.py](file:///Users/sreehariniganishkaa/triagemodel/data_loader.py) for full heuristic.
+
+## Dataset Information
+- **Total Valid Patients Extracted**: 40,336
+- **Training Set Allocation**: 32,268 records
+- **Testing Set Allocation**: 8,068 records
+- **Feature Set**: HR, O2Sat, Temp, SBP, MAP, DBP, Resp, EtCO2
+- **Processing**: 80/20 stratified split, median imputation, standard scaling
+
+## All Models — Summary
+
+| Model | Accuracy | F1 (weighted) |
+| :--- | :--- | :--- |
+| **LightGBM** | 98.33% | 0.9832 |
+| **Stacking** | 98.30% | 0.9830 |
+| **CatBoost** | 98.09% | 0.9809 |
+| DART (LightGBM) | 97.81% | 0.9780 |
+| XGBoost | 97.72% | 0.9771 |
+| HistGradientBoosting | 97.20% | 0.9719 |
+| RandomForest | 97.12% | 0.9712 |
+| StochasticGB | 95.60% | 0.9558 |
+| GradientBoosting | 94.96% | 0.9492 |
+| ExtraTrees | 93.85% | 0.9377 |
+| NGBoost | 73.39% | 0.7207 |
+| AdaBoost | 56.16% | 0.4642 |
+| AdaptiveGB | 48.23% | 0.3529 |
+
+> [!NOTE]
+> **Stacking** combines LightGBM + CatBoost + XGBoost + RandomForest with a Logistic Regression meta-learner (5-fold CV). Four additional exotic boosting approaches (BrownBoost, LPBoost, Totally Corrective Boosting, LogitBoost) lacked viable modern Python packages, while rule-based GBDR lacked multi-class support.
+
+---
+
+## Top 3 Models — Detailed Metrics
+
+### 1. LightGBM — Accuracy: 98.33% · Kappa: 0.9911
+
+```text
+              precision    recall  f1-score   support
+       ESI 1       0.99      0.97      0.98       266
+       ESI 2       0.98      0.96      0.97       785
+       ESI 3       0.98      0.99      0.99      3174
+       ESI 4       0.98      0.99      0.98      2421
+       ESI 5       0.99      0.96      0.98      1422
+    accuracy                           0.98      8068
+```
+
+**Confusion Matrix:**
+|  | ESI 1 | ESI 2 | ESI 3 | ESI 4 | ESI 5 |
+|---|---|---|---|---|---|
+| **ESI 1** | 259 | 7 | 0 | 0 | 0 |
+| **ESI 2** | 3 | 757 | 25 | 0 | 0 |
+| **ESI 3** | 0 | 11 | 3156 | 5 | 2 |
+| **ESI 4** | 0 | 0 | 24 | 2389 | 8 |
+| **ESI 5** | 0 | 0 | 0 | 50 | 1372 |
+
+**Weighted Quadratic Cohen's Kappa: 0.9911**
+
+---
+
+### 2. Stacking (LightGBM+CatBoost+XGBoost+RF) — Accuracy: 98.30% · Kappa: 0.9908
+
+```text
+              precision    recall  f1-score   support
+       ESI 1       0.98      0.97      0.98       266
+       ESI 2       0.97      0.97      0.97       785
+       ESI 3       0.99      0.99      0.99      3174
+       ESI 4       0.98      0.99      0.98      2421
+       ESI 5       0.99      0.97      0.98      1422
+    accuracy                           0.98      8068
+```
+
+**Confusion Matrix:**
+|  | ESI 1 | ESI 2 | ESI 3 | ESI 4 | ESI 5 |
+|---|---|---|---|---|---|
+| **ESI 1** | 258 | 8 | 0 | 0 | 0 |
+| **ESI 2** | 4 | 759 | 22 | 0 | 0 |
+| **ESI 3** | 0 | 12 | 3149 | 10 | 3 |
+| **ESI 4** | 0 | 0 | 24 | 2391 | 6 |
+| **ESI 5** | 0 | 0 | 0 | 48 | 1374 |
+
+**Weighted Quadratic Cohen's Kappa: 0.9908**
+
+---
+
+### 3. CatBoost — Accuracy: 98.09% · Kappa: 0.9890
+
+```text
+              precision    recall  f1-score   support
+       ESI 1       1.00      0.96      0.98       266
+       ESI 2       0.97      0.97      0.97       785
+       ESI 3       0.98      0.99      0.99      3174
+       ESI 4       0.97      0.99      0.98      2421
+       ESI 5       0.99      0.96      0.98      1422
+    accuracy                           0.98      8068
+```
+
+**Confusion Matrix:**
+|  | ESI 1 | ESI 2 | ESI 3 | ESI 4 | ESI 5 |
+|---|---|---|---|---|---|
+| **ESI 1** | 255 | 11 | 0 | 0 | 0 |
+| **ESI 2** | 1 | 758 | 26 | 0 | 0 |
+| **ESI 3** | 0 | 12 | 3143 | 13 | 6 |
+| **ESI 4** | 0 | 0 | 28 | 2389 | 4 |
+| **ESI 5** | 0 | 0 | 1 | 52 | 1369 |
+
+**Weighted Quadratic Cohen's Kappa: 0.9890**
+
+---
+
+## Code References
+- [data_loader.py](file:///Users/sreehariniganishkaa/triagemodel/data_loader.py) — Parses dataset and builds the labeled CSV
+- [train_models.py](file:///Users/sreehariniganishkaa/triagemodel/train_models.py) — Trains all 11 models and computes metrics
