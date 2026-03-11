@@ -5,9 +5,9 @@ import pandas as pd
 app = Flask(__name__)
 
 # Load Model Setup
-MODEL_PATH = '/Users/sreehariniganishkaa/triagemodel/best_esi_model.pkl'
-IMPUTER_PATH = '/Users/sreehariniganishkaa/triagemodel/imputer.pkl'
-SCALER_PATH = '/Users/sreehariniganishkaa/triagemodel/scaler.pkl'
+MODEL_PATH = "best_esi_model.pkl"
+IMPUTER_PATH = "imputer.pkl"
+SCALER_PATH = "scaler.pkl"
 
 model = None
 imputer = None
