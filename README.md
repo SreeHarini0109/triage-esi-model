@@ -1,5 +1,7 @@
 # ESI Triage Classification Models
 
+ **Live Demo:** https://triage-esi-model.onrender.com/
+
 ## Objective
 Classify patients into **5 Emergency Severity Index (ESI) levels** using presentation-time vital signs from the **PhysioNet 2019 Sepsis dataset**.  
 A total of **11 machine learning models**, including a **stacking ensemble**, were trained and evaluated.
@@ -47,4 +49,95 @@ See `data_loader.py` for the complete heuristic implementation.
 
 **Note:**  
 Hyperparameter tuning using **Optuna** improved the performance of top-tier models, with **LightGBM achieving the highest accuracy (98.36%)**.
+
+# Top 3 Models — Detailed Metrics
+
+## 1. LightGBM
+**Accuracy:** 98.33%  
+**Weighted Quadratic Cohen’s Kappa:** 0.9911  
+
+### Classification Report
+
+| Class | Precision | Recall | F1-score | Support |
+|------|-----------|--------|---------|--------|
+| ESI 1 | 0.99 | 0.97 | 0.98 | 266 |
+| ESI 2 | 0.98 | 0.96 | 0.97 | 785 |
+| ESI 3 | 0.98 | 0.99 | 0.99 | 3174 |
+| ESI 4 | 0.98 | 0.99 | 0.98 | 2421 |
+| ESI 5 | 0.99 | 0.96 | 0.98 | 1422 |
+
+**Overall Accuracy:** 0.98  
+**Total Samples:** 8068  
+
+### Confusion Matrix
+
+| Actual \ Predicted | ESI1 | ESI2 | ESI3 | ESI4 | ESI5 |
+|--------------------|------|------|------|------|------|
+| **ESI1** | 259 | 7 | 0 | 0 | 0 |
+| **ESI2** | 3 | 757 | 25 | 0 | 0 |
+| **ESI3** | 0 | 11 | 3156 | 5 | 2 |
+| **ESI4** | 0 | 0 | 24 | 2389 | 8 |
+| **ESI5** | 0 | 0 | 0 | 50 | 1372 |
+
+---
+
+## 2. Stacking (LightGBM + CatBoost + XGBoost + RandomForest)
+
+**Accuracy:** 98.30%  
+**Weighted Quadratic Cohen’s Kappa:** 0.9908  
+
+### Classification Report
+
+| Class | Precision | Recall | F1-score | Support |
+|------|-----------|--------|---------|--------|
+| ESI 1 | 0.98 | 0.97 | 0.98 | 266 |
+| ESI 2 | 0.97 | 0.97 | 0.97 | 785 |
+| ESI 3 | 0.99 | 0.99 | 0.99 | 3174 |
+| ESI 4 | 0.98 | 0.99 | 0.98 | 2421 |
+| ESI 5 | 0.99 | 0.97 | 0.98 | 1422 |
+
+**Overall Accuracy:** 0.98  
+**Total Samples:** 8068  
+
+### Confusion Matrix
+
+| Actual \ Predicted | ESI1 | ESI2 | ESI3 | ESI4 | ESI5 |
+|--------------------|------|------|------|------|------|
+| **ESI1** | 258 | 8 | 0 | 0 | 0 |
+| **ESI2** | 4 | 759 | 22 | 0 | 0 |
+| **ESI3** | 0 | 12 | 3149 | 10 | 3 |
+| **ESI4** | 0 | 0 | 24 | 2391 | 6 |
+| **ESI5** | 0 | 0 | 0 | 48 | 1374 |
+
+---
+
+## 3. CatBoost
+
+**Accuracy:** 98.09%  
+**Weighted Quadratic Cohen’s Kappa:** 0.9890  
+
+### Classification Report
+
+| Class | Precision | Recall | F1-score | Support |
+|------|-----------|--------|---------|--------|
+| ESI 1 | 1.00 | 0.96 | 0.98 | 266 |
+| ESI 2 | 0.97 | 0.97 | 0.97 | 785 |
+| ESI 3 | 0.98 | 0.99 | 0.99 | 3174 |
+| ESI 4 | 0.97 | 0.99 | 0.98 | 2421 |
+| ESI 5 | 0.99 | 0.96 | 0.98 | 1422 |
+
+**Overall Accuracy:** 0.98  
+**Total Samples:** 8068  
+
+### Confusion Matrix
+
+| Actual \ Predicted | ESI1 | ESI2 | ESI3 | ESI4 | ESI5 |
+|--------------------|------|------|------|------|------|
+| **ESI1** | 255 | 11 | 0 | 0 | 0 |
+| **ESI2** | 1 | 758 | 26 | 0 | 0 |
+| **ESI3** | 0 | 12 | 3143 | 13 | 6 |
+| **ESI4** | 0 | 0 | 28 | 2389 | 4 |
+| **ESI5** | 0 | 0 | 1 | 52 | 1369 |
+
+---
 
